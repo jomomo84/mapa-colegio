@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instalaciones — Colegio Diocesano Santo Domingo (Orihuela, Alicante)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#1a1a1a; font-family:Arial,Helvetica,sans-serif; }
+
+  .map-wrap {
+    position:relative;
+    width:100%;
+    max-width:2000px;
+    margin:0 auto;
+  }
+  .map-wrap img {
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  /* ── MARCADORES ── */
+  .m {
+    position:absolute;
+    transform:translate(-50%,-50%);
+    width:28px; height:28px;
+    border-radius:50%;
+    background:white;
+    border:2.5px solid #333;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:#333;
+    cursor:pointer;
+    z-index:10;
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
+    transition:transform .15s;
+  }
+  .m:hover {
+    transform:translate(-50%,-50%) scale(1.3);
+    z-index:100;
+    box-shadow:0 0 0 4px rgba(255,255,255,.5), 0 3px 10px rgba(0,0,0,.5);
+  }
+  .padel {
+	background-color: #CFE8FF;
+  }
+  .baloncesto {
+	background-color: #FFD6A5;
+  }
+  .futbol {
+	background-color: #BFE3C0;
+  }
+  .futbolsala {
+	background-color: #BFEAF5;
+  }
+  .voleibol {
+	background-color: #E6D6FF;
+  }
+  .edificio {
+	background-color: #E0E0E0;
+  }
+  .otro {
+	background-color: #FFF2B3;
+  }
+
+  /* ── TOOLTIP ── */
+  .m .tt {
+    position:absolute;
+    bottom:calc(100% + 8px);
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(15,15,15,.9);
+    color:#fff;
+    padding:5px 11px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .15s;
+    box-shadow:0 3px 10px rgba(0,0,0,.4);
+  }
+  .m .tt::after {
+    content:'';
+    position:absolute;
+    top:100%; left:50%;
+    transform:translateX(-50%);
+    border:5px solid transparent;
+    border-top-color:rgba(15,15,15,.9);
+  }
+  .m:hover .tt { opacity:1; }
+
+  /* ── LEYENDA ── */
+  .leyenda {
+    position:absolute;
+    top:12px; left:12px;
+    background:rgba(255,255,255,.93);
+    border-radius:10px;
+    padding:14px 16px;
+    box-shadow:0 2px 12px rgba(0,0,0,.25);
+    z-index:50;
+    min-width:230px;
+  }
+  .leyenda h3 {
+    font-size:14px;
+    margin-bottom:8px;
+    padding-bottom:6px;
+    border-bottom:2px solid #e5e5e5;
+    color:#222;
+  }
+  .ley-item {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 0;
+    font-size:12px;
+    color:#333;
+  }
+  .ley-dot {
+    width:16px; height:16px;
+    border-radius:4px;
+    flex-shrink:0;
+  }
+  .ley-item span.nums {
+    color:#888;
+    font-size:11px;
+    margin-left:auto;
+  }
+  .ley-sep {
+    height:1px;
+    background:#e5e5e5;
+    margin:6px 0;
+  }
+  .ley-total {
+    font-size:11px;
+    color:#888;
+    padding-top:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="map-wrap">
+  <!-- IMAGEN DE FONDO: cambia src si renombras el archivo -->
+  <img src="vista-area-2023-mod.png" alt="Mapa instalaciones Colegio Diocesano Santo Domingo">
+
+  <!-- ╔═══════════════════════════════════════════════════════════╗
+       ║  MARCADORES NUMERADOS                                    ║
+       ║  Posición en % (left, top) respecto a imagen 2000×1250   ║
+       ║  Para mover: edita left/top                              ║
+       ║  Para renombrar: edita el texto del <span class="tt">    ║
+       ╚═══════════════════════════════════════════════════════════╝ -->
+
+  <!-- PÁDEL -->
+  <div class="m padel" style="left:70.90%;top:23.36%">P1<span class="tt">Pádel 1</span></div>
+  <div class="m padel" style="left:72.90%;top:28.36%">P2<span class="tt">Pádel 2</span></div>
+  <div class="m padel" style="left:74.90%;top:33.36%">P3<span class="tt">Pádel 3</span></div>
+  <div class="m padel" style="left:75.95%;top:20.24%">P4<span class="tt">Pádel 4</span></div>
+
+  <!-- FÚTBOL SALA -->
+  <div class="m futbolsala" style="left:42.05%;top:61.44%">FS1<span class="tt">Fútbol Sala 1</span></div>
+  <div class="m futbolsala" style="left:55.45%;top:75.68%">FS2<span class="tt">Fútbol Sala 2</span></div>
+  <div class="m futbolsala" style="left:63.25%;top:67.48%">FS3<span class="tt">Fútbol Sala 3</span></div>
+  <div class="m futbolsala" style="left:63.85%;top:41.20%">FS4<span class="tt">Fútbol Sala 4</span></div>
+  <div class="m futbolsala" style="left:67.80%;top:36.72%">FS5<span class="tt">Fútbol Sala 5</span></div>
+
+  <!-- BALONCESTO -->
+  <div class="m baloncesto" style="left:52.60%;top:70.16%">B1<span class="tt">Baloncesto 1</span></div>
+  <div class="m baloncesto" style="left:61.60%;top:42.80%">B2<span class="tt">Baloncesto 2</span></div>
+  
+  <div class="m baloncesto" style="left:53.70%;top:78.96%">M1<span class="tt">Minibasket 1</span></div>
+  <div class="m baloncesto" style="left:57.95%;top:76.36%">M2<span class="tt">Minibasket 2</span></div>
+  <div class="m baloncesto" style="left:59.60%;top:38.20%">M3<span class="tt">Minibasket 3</span></div>
+  <div class="m baloncesto" style="left:63.60%;top:46.60%">M4<span class="tt">Minibasket 4</span></div>
+  
+
+  <!-- VOLEIBOL -->
+  <div class="m voleibol" style="left:35.85%;top:56.76%">V1<span class="tt">Voleibol 1</span></div>
+  <div class="m voleibol" style="left:58.25%;top:64.56%">V2<span class="tt">Voleibol 2</span></div>
+  <div class="m voleibol" style="left:59.75%;top:69.48%">V3<span class="tt">Voleibol 3</span></div>
+  <div class="m voleibol" style="left:61.25%;top:74.56%">V4<span class="tt">Voleibol 4</span></div>
+
+  <!-- FÚTBOL -->
+  <div class="m futbol" style="left:76.50%;top:53.16%">F11<span class="tt">Fútbol 11 central</span></div>
+  <div class="m futbol" style="left:77.10%;top:58.66%">F8C<span class="tt">Fútbol 8 central</span></div>
+  <div class="m futbol" style="left:68.00%;top:63.04%">F8S<span class="tt">Fútbol 8 sur</span></div>
+  <div class="m futbol" style="left:84.50%;top:55.76%">F8N<span class="tt">Fútbol 8 norte</span></div>
+  
+
+  <!-- EDIFICIOS Y PATIOS -->
+  <div class="m edificio" style="left:12.70%;top:50.84%">1<span class="tt">Iglesia</span></div>
+  <div class="m edificio" style="left:13.50%;top:69.92%">2<span class="tt">Consejería</span></div>
+  <div class="m edificio" style="left:18.50%;top:69.92%">3<span class="tt">Secretaría</span></div>
+  <div class="m edificio" style="left:18.95%;top:60.00%">4<span class="tt">Claustro del Convento</span></div>
+  <div class="m edificio" style="left:30.00%;top:70.60%">5<span class="tt">Patio de la Universidad</span></div>
+  <div class="m edificio" style="left:23.40%;top:43.72%">6<span class="tt">Patio de Juan XXIII</span></div>
+  <div class="m edificio" style="left:26.40%;top:23.72%">7<span class="tt">Patio de Lourdes</span></div>
+  
+  <div class="m edificio" style="left:30.00%;top:77.60%">8<span class="tt">Tienda</span></div>
+  <div class="m edificio" style="left:32.00%;top:74.60%">9<span class="tt">Biblioteca</span></div>
+  <div class="m edificio" style="left:35.00%;top:69.60%">10<span class="tt">Gimnasio</span></div>
+  <div class="m edificio" style="left:26.00%;top:58.60%">11<span class="tt">Entrada al salón de actos</span></div>
+  <div class="m edificio" style="left:31.00%;top:55.60%">12<span class="tt">Comedor</span></div>
+  <div class="m edificio" style="left:56.65%;top:53.12%">13<span class="tt">Vestuarios</span></div>
+  <div class="m edificio" style="left:82.00%;top:31.44%">14<span class="tt">Almacén</span></div>
+
+
+  <!-- ── LEYENDA ── -->
+  <div class="leyenda">
+    <h3>Zonas del Colegio</h3>
+    <div class="ley-item"><div class="ley-dot" style="background:#0aa3af"></div><b>Pádel</b> — 4 pistas</div>
+    <div class="ley-item"><div class="ley-dot" style="background:#0a63ff"></div><b>Fútbol Sala</b> — 5 pistas</div>
+    <div class="ley-item"><div class="ley-dot" style="background:#e0aa00"></div><b>Baloncesto</b> — 2 pistas</div>
+    <div class="ley-item"><div class="ley-dot" style="background:#e0aa00"></div><b>Minibasket</b> — 4 pistas</div>
+    <div class="ley-item"><div class="ley-dot" style="background:#e90042"></div><b>Voleibol</b> — 4 pistas</div>
+    <div class="ley-item"><div class="ley-dot" style="background:#09d34f"></div><b>Fútbol</b> — 4 campos</div>
+    <div class="ley-sep"></div>
+    <div class="ley-item"><div class="ley-dot" style="background:#ac9196"></div><b>Edificios / Patios</b><span class="nums">1–14</span></div>
+    <div class="ley-sep"></div>
+    <div class="ley-total">23 pistas deportivas · 14 zonas edificio</div>
+  </div>
+
+</div>
+
+</body>
+</html>
