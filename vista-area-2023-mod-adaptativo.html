@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instalaciones — Colegio Diocesano Santo Domingo (Orihuela, Alicante)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#1a1a1a; font-family:Arial,Helvetica,sans-serif; }
+
+  .map-wrap {
+    position:relative;
+    width:100%;
+    max-width:2000px;
+    margin:0 auto;
+  }
+  .map-wrap img {
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  /* ── MARCADORES ── */
+  .m {
+    position:absolute;
+    transform:translate(-50%,-50%);
+    /* Escala: 28px en escritorio → ~16px en móvil pequeño */
+    width: clamp(16px, 2.2vw, 28px);
+    height: clamp(16px, 2.2vw, 28px);
+    border-radius:50%;
+    background:white;
+    border: clamp(1.5px, 0.2vw, 2.5px) solid #333;
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(6px, 0.85vw, 12px);
+    font-weight:700;
+    color:#333;
+    cursor:pointer;
+    z-index:10;
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
+    transition:transform .15s, box-shadow .15s;
+    /* Área táctil mínima recomendada aunque visualmente sea pequeño */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  /* Hover solo en dispositivos que lo soportan (no táctil) */
+  @media (hover:hover) {
+    .m:hover {
+      transform:translate(-50%,-50%) scale(1.35);
+      z-index:100;
+      box-shadow:0 0 0 4px rgba(255,255,255,.5), 0 3px 10px rgba(0,0,0,.5);
+    }
+    .m:hover .tt { opacity:1; pointer-events:none; }
+  }
+  /* Tooltip activo por tap en táctil */
+  .m.active {
+    transform:translate(-50%,-50%) scale(1.35);
+    z-index:100;
+    box-shadow:0 0 0 4px rgba(255,255,255,.5), 0 3px 10px rgba(0,0,0,.5);
+  }
+  .m.active .tt { opacity:1; }
+
+  .padel       { background-color:#CFE8FF; }
+  .baloncesto  { background-color:#FFD6A5; }
+  .futbol      { background-color:#BFE3C0; }
+  .futbolsala  { background-color:#BFEAF5; }
+  .voleibol    { background-color:#E6D6FF; }
+  .edificio    { background-color:#E0E0E0; }
+  .otro        { background-color:#FFF2B3; }
+
+  /* ── TOOLTIP ── */
+  .m .tt {
+    position:absolute;
+    bottom:calc(100% + 8px);
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(15,15,15,.92);
+    color:#fff;
+    padding: clamp(4px,0.5vw,6px) clamp(8px,1vw,12px);
+    border-radius:6px;
+    font-size: clamp(10px, 1vw, 13px);
+    font-weight:600;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .15s;
+    box-shadow:0 3px 10px rgba(0,0,0,.4);
+    z-index:200;
+  }
+  .m .tt::after {
+    content:'';
+    position:absolute;
+    top:100%; left:50%;
+    transform:translateX(-50%);
+    border:5px solid transparent;
+    border-top-color:rgba(15,15,15,.92);
+  }
+  /* Tooltip hacia abajo si el marcador está en el tercio superior */
+  .m.tt-down .tt {
+    bottom:auto;
+    top:calc(100% + 8px);
+  }
+  .m.tt-down .tt::after {
+    top:auto;
+    bottom:100%;
+    border-top-color:transparent;
+    border-bottom-color:rgba(15,15,15,.92);
+  }
+
+  /* ── LEYENDA ── */
+  .leyenda {
+    position:absolute;
+    top:12px; left:12px;
+    background:rgba(255,255,255,.93);
+    border-radius:10px;
+    padding:14px 16px;
+    box-shadow:0 2px 12px rgba(0,0,0,.25);
+    z-index:50;
+    min-width:230px;
+    max-width: min(260px, 55vw);
+  }
+  .leyenda-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .leyenda h3 {
+    font-size: clamp(11px, 1.2vw, 14px);
+    color:#222;
+  }
+  /* Botón colapsar — solo visible en móvil */
+  .leyenda-toggle {
+    display:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:2px 4px;
+    color:#555;
+    font-size:16px;
+    line-height:1;
+    flex-shrink:0;
+  }
+  @media (max-width: 600px) {
+    .leyenda-toggle { display:block; }
+  }
+  .leyenda-body {
+    margin-top:8px;
+    padding-top:6px;
+    border-top:2px solid #e5e5e5;
+  }
+  .leyenda-body.collapsed { display:none; }
+  .ley-item {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 0;
+    font-size: clamp(10px, 1vw, 12px);
+    color:#333;
+  }
+  .ley-dot {
+    width: clamp(12px, 1.2vw, 16px);
+    height: clamp(12px, 1.2vw, 16px);
+    border-radius:4px;
+    flex-shrink:0;
+  }
+  .ley-item span.nums {
+    color:#888;
+    font-size: clamp(9px, 0.9vw, 11px);
+    margin-left:auto;
+  }
+  .ley-sep {
+    height:1px;
+    background:#e5e5e5;
+    margin:6px 0;
+  }
+  .ley-total {
+    font-size: clamp(9px, 0.9vw, 11px);
+    color:#888;
+    padding-top:2px;
+  }
+
+  /* ── AJUSTES MÓVIL ── */
+  @media (max-width: 600px) {
+    .leyenda {
+      top:8px; left:8px;
+      padding:10px 12px;
+      min-width:0;
+      max-width: 52vw;
+    }
+  }
+  @media (max-width: 400px) {
+    .leyenda {
+      max-width: 58vw;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="map-wrap" id="mapWrap">
+  <img src="vista-area-2023-mod.png" alt="Mapa instalaciones Colegio Diocesano Santo Domingo">
+
+  <!-- PÁDEL -->
+  <div class="m padel" style="left:70.90%;top:23.36%">P1<span class="tt">Pádel 1</span></div>
+  <div class="m padel" style="left:72.90%;top:28.36%">P2<span class="tt">Pádel 2</span></div>
+  <div class="m padel" style="left:74.90%;top:33.36%">P3<span class="tt">Pádel 3</span></div>
+  <div class="m padel" style="left:75.95%;top:20.24%">P4<span class="tt">Pádel 4</span></div>
+
+  <!-- FÚTBOL SALA -->
+  <div class="m futbolsala" style="left:42.05%;top:61.44%">FS1<span class="tt">Fútbol Sala 1</span></div>
+  <div class="m futbolsala" style="left:55.45%;top:75.68%">FS2<span class="tt">Fútbol Sala 2</span></div>
+  <div class="m futbolsala" style="left:63.25%;top:67.48%">FS3<span class="tt">Fútbol Sala 3</span></div>
+  <div class="m futbolsala" style="left:63.85%;top:41.20%">FS4<span class="tt">Fútbol Sala 4</span></div>
+  <div class="m futbolsala" style="left:67.80%;top:36.72%">FS5<span class="tt">Fútbol Sala 5</span></div>
+
+  <!-- BALONCESTO -->
+  <div class="m baloncesto" style="left:52.60%;top:70.16%">B1<span class="tt">Baloncesto 1</span></div>
+  <div class="m baloncesto" style="left:61.60%;top:42.80%">B2<span class="tt">Baloncesto 2</span></div>
+  <div class="m baloncesto" style="left:53.70%;top:78.96%">M1<span class="tt">Minibasket 1</span></div>
+  <div class="m baloncesto" style="left:57.95%;top:76.36%">M2<span class="tt">Minibasket 2</span></div>
+  <div class="m baloncesto" style="left:59.60%;top:38.20%">M3<span class="tt">Minibasket 3</span></div>
+  <div class="m baloncesto" style="left:63.60%;top:46.60%">M4<span class="tt">Minibasket 4</span></div>
+
+  <!-- VOLEIBOL -->
+  <div class="m voleibol" style="left:35.85%;top:56.76%">V1<span class="tt">Voleibol 1</span></div>
+  <div class="m voleibol" style="left:58.25%;top:64.56%">V2<span class="tt">Voleibol 2</span></div>
+  <div class="m voleibol" style="left:59.75%;top:69.48%">V3<span class="tt">Voleibol 3</span></div>
+  <div class="m voleibol" style="left:61.25%;top:74.56%">V4<span class="tt">Voleibol 4</span></div>
+
+  <!-- FÚTBOL -->
+  <div class="m futbol" style="left:76.50%;top:53.16%">F11<span class="tt">Fútbol 11 central</span></div>
+  <div class="m futbol" style="left:77.10%;top:58.66%">F8C<span class="tt">Fútbol 8 central</span></div>
+  <div class="m futbol" style="left:68.00%;top:63.04%">F8S<span class="tt">Fútbol 8 sur</span></div>
+  <div class="m futbol" style="left:84.50%;top:55.76%">F8N<span class="tt">Fútbol 8 norte</span></div>
+
+  <!-- EDIFICIOS Y PATIOS -->
+  <div class="m edificio" style="left:12.70%;top:50.84%">1<span class="tt">Iglesia</span></div>
+  <div class="m edificio" style="left:13.50%;top:69.92%">2<span class="tt">Consejería</span></div>
+  <div class="m edificio" style="left:18.50%;top:69.92%">3<span class="tt">Secretaría</span></div>
+  <div class="m edificio" style="left:18.95%;top:60.00%">4<span class="tt">Claustro del Convento</span></div>
+  <div class="m edificio" style="left:30.00%;top:70.60%">5<span class="tt">Patio de la Universidad</span></div>
+  <div class="m edificio" style="left:23.40%;top:43.72%">6<span class="tt">Patio de Juan XXIII</span></div>
+  <div class="m edificio" style="left:26.40%;top:23.72%">7<span class="tt">Patio de Lourdes</span></div>
+  <div class="m edificio" style="left:30.00%;top:77.60%">8<span class="tt">Tienda</span></div>
+  <div class="m edificio" style="left:32.00%;top:74.60%">9<span class="tt">Biblioteca</span></div>
+  <div class="m edificio" style="left:35.00%;top:69.60%">10<span class="tt">Gimnasio</span></div>
+  <div class="m edificio" style="left:26.00%;top:58.60%">11<span class="tt">Entrada al salón de actos</span></div>
+  <div class="m edificio" style="left:31.00%;top:55.60%">12<span class="tt">Comedor</span></div>
+  <div class="m edificio" style="left:56.65%;top:53.12%">13<span class="tt">Vestuarios</span></div>
+  <div class="m edificio" style="left:82.00%;top:31.44%">14<span class="tt">Almacén</span></div>
+
+  <!-- ── LEYENDA ── -->
+  <div class="leyenda" id="leyenda">
+    <div class="leyenda-header" id="leyendaHeader">
+      <h3>Zonas del Colegio</h3>
+      <button class="leyenda-toggle" id="leyendaToggle" aria-label="Mostrar/ocultar leyenda">▲</button>
+    </div>
+    <div class="leyenda-body" id="leyendaBody">
+      <div class="ley-item"><div class="ley-dot" style="background:#0aa3af"></div><b>Pádel</b> — 4 pistas</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#0a63ff"></div><b>Fútbol Sala</b> — 5 pistas</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#e0aa00"></div><b>Baloncesto</b> — 2 pistas</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#e0aa00"></div><b>Minibasket</b> — 4 pistas</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#e90042"></div><b>Voleibol</b> — 4 pistas</div>
+      <div class="ley-item"><div class="ley-dot" style="background:#09d34f"></div><b>Fútbol</b> — 4 campos</div>
+      <div class="ley-sep"></div>
+      <div class="ley-item"><div class="ley-dot" style="background:#ac9196"></div><b>Edificios / Patios</b><span class="nums">1–14</span></div>
+      <div class="ley-sep"></div>
+      <div class="ley-total">23 pistas deportivas · 14 zonas edificio</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ────────────────────────────────────────────────
+     1. TOOLTIPS EN TÁCTIL
+     - Tap en un marcador: muestra su tooltip
+     - Tap fuera o en otro marcador: cierra el anterior
+  ──────────────────────────────────────────────── */
+  const isTouchDevice = () => window.matchMedia('(hover:none)').matches;
+
+  const markers = document.querySelectorAll('.m');
+  let activeMarker = null;
+
+  markers.forEach(m => {
+    // Tooltip hacia arriba o hacia abajo según posición
+    const topPct = parseFloat(m.style.top);
+    if (topPct < 20) m.classList.add('tt-down');
+
+    m.addEventListener('click', e => {
+      if (!isTouchDevice()) return; // en escritorio ya lo gestiona el CSS :hover
+      e.stopPropagation();
+      if (activeMarker && activeMarker !== m) {
+        activeMarker.classList.remove('active');
+      }
+      m.classList.toggle('active');
+      activeMarker = m.classList.contains('active') ? m : null;
+    });
+  });
+
+  document.addEventListener('click', () => {
+    if (activeMarker) {
+      activeMarker.classList.remove('active');
+      activeMarker = null;
+    }
+  });
+
+  /* ────────────────────────────────────────────────
+     2. LEYENDA PLEGABLE EN MÓVIL
+  ──────────────────────────────────────────────── */
+  const toggleBtn  = document.getElementById('leyendaToggle');
+  const body       = document.getElementById('leyendaBody');
+  const header     = document.getElementById('leyendaHeader');
+
+  function collapseIfMobile() {
+    if (window.innerWidth <= 600) {
+      body.classList.add('collapsed');
+      toggleBtn.textContent = '▼';
+    } else {
+      body.classList.remove('collapsed');
+      toggleBtn.textContent = '▲';
+    }
+  }
+
+  // Estado inicial
+  collapseIfMobile();
+
+  // Colapsar/expandir al pulsar cabecera (solo táctil/móvil)
+  header.addEventListener('click', () => {
+    if (window.innerWidth > 600) return;
+    const isCollapsed = body.classList.toggle('collapsed');
+    toggleBtn.textContent = isCollapsed ? '▼' : '▲';
+  });
+
+  // Si el usuario rota el dispositivo o redimensiona
+  window.addEventListener('resize', collapseIfMobile);
+
+  /* ────────────────────────────────────────────────
+     3. EVITAR QUE TOOLTIPS SE SALGAN DE LA IMAGEN
+     Re-posiciona horizontalmente si queda fuera del wrap
+  ──────────────────────────────────────────────── */
+  function clampTooltips() {
+    const wrap = document.getElementById('mapWrap');
+    const wrapW = wrap.offsetWidth;
+
+    markers.forEach(m => {
+      const tt = m.querySelector('.tt');
+      if (!tt) return;
+      tt.style.left   = '';
+      tt.style.transform = '';
+      // Posición estimada del centro del marcador (px)
+      const mLeft = parseFloat(m.style.left) / 100 * wrapW;
+      const ttW   = Math.min(tt.scrollWidth + 24, 220); // ancho estimado
+      const margin = 8;
+
+      if (mLeft - ttW / 2 < margin) {
+        // Desborda por la izquierda → anclar a izquierda
+        const offset = margin - (mLeft - ttW / 2);
+        tt.style.left = `calc(50% + ${offset}px)`;
+      } else if (mLeft + ttW / 2 > wrapW - margin) {
+        // Desborda por la derecha → anclar a derecha
+        const offset = (mLeft + ttW / 2) - (wrapW - margin);
+        tt.style.left = `calc(50% - ${offset}px)`;
+      }
+    });
+  }
+
+  window.addEventListener('resize', clampTooltips);
+  // Esperar a que la imagen cargue para tener dimensiones reales
+  const img = document.querySelector('.map-wrap img');
+  if (img.complete) clampTooltips();
+  else img.addEventListener('load', clampTooltips);
+</script>
+
+</body>
+</html>
